@@ -126,7 +126,14 @@ static esp_err_t start_dma(int line_width,int samples_per_cc, int ch = 1)
     I2S0.clkm_conf.clka_en = 1;                 // Set this bit to enable clk_apll.
     I2S0.fifo_conf.tx_fifo_mod = (ch == 2) ? 0 : 1; // 32-bit dual or 16-bit single channel data
 
+#if   VIDEO_PIN == 25
     dac_output_enable(DAC_CHANNEL_1);           // DAC, video on GPIO25
+#elif VIDEO_PIN == 26
+    dac_output_enable(DAC_CHANNEL_2);           // DAC, video on GPIO26
+#else
+#error Invalid output pin
+#endif
+
     dac_i2s_enable();                           // start DAC!
 
     I2S0.conf.tx_start = 1;                     // start DMA!
