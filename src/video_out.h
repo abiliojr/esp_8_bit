@@ -531,6 +531,9 @@ void IRAM_ATTR burst(uint16_t* line)
                 line[i+3] = BLANKING_LEVEL;
                 line[i+2] = BLANKING_LEVEL - BLANKING_LEVEL/2;
             }
+            // Back porch
+            for (i = _hsync + 16 + (4*9); i < _hsync + 16 + (4*9) + 20; i++)
+                line[i] = BLANKING_LEVEL;
             break;
         case 3:
             // 3 samples per color clock
@@ -550,10 +553,10 @@ void IRAM_ATTR burst(uint16_t* line)
 void IRAM_ATTR sync(uint16_t* line, int syncwidth)
 {
     //Front porch
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 16; i++)
         line[i] = BLANKING_LEVEL;
     //Sync pulse
-	for (int i = 8; i < syncwidth + 8; i++)
+	for (int i = 16; i < syncwidth + 16; i++)
         line[i] = SYNC_LEVEL;
 }
 
@@ -604,13 +607,8 @@ void IRAM_ATTR video_isr(volatile void* vbuf)
         sync(buf,_hsync);
         burst(buf);
         blit(_lines[i],buf + _active_start);
-
-    } else if (i < (_active_lines + 5)) {   // post render/black
-        blanking(buf,false);
-
-    } else if (i < (_active_lines + 8)) {   // vsync
+    } else if (i == 247) {
         blanking(buf,true);
-
     } else {                                // pre render/black
         blanking(buf,false);
     }
