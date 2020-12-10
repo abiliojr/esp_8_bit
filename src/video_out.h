@@ -423,7 +423,7 @@ void video_init(int samples_per_cc, int machine, const uint32_t* palette, int nt
     _line_width = NTSC_COLOR_CLOCKS_PER_SCANLINE*samples_per_cc;
     _line_count = NTSC_LINES;
     _hsync_long = usec(63.555-4.7);
-    _active_start = usec(samples_per_cc == 4 ? 10 : 10.5);
+    _active_start = usec(samples_per_cc == 4 ? 10.7 : 10.5);
     _hsync = usec(4.7);
     _active_lines = 240;
     video_init_hw(_line_width,_samples_per_cc);    // init the hardware
@@ -522,17 +522,17 @@ void IRAM_ATTR burst(uint16_t* line)
         case 4:
             // 4 samples per color clock
 			//Breezeway (delay colorburst by two cycles following the sync pulse)
-			for (int i = _hsync + 8; i < _hsync + 16; i++)
+			for (int i = _hsync + 24; i < _hsync + 24 + 8; i++)
 				line[i] = BLANKING_LEVEL;
             //Color burst 9 cycles
-			for (i = _hsync + 16; i < _hsync + 16 + (4*9); i += 4) {
+			for (i = _hsync + 24 + 8; i < _hsync + 24 + 8 + (4*9); i += 4) {
                 line[i+1] = BLANKING_LEVEL;
                 line[i+0] = BLANKING_LEVEL + BLANKING_LEVEL/2;
                 line[i+3] = BLANKING_LEVEL;
                 line[i+2] = BLANKING_LEVEL - BLANKING_LEVEL/2;
             }
             // Back porch
-            for (i = _hsync + 16 + (4*9); i < _hsync + 16 + (4*9) + 20; i++)
+            for (i = _hsync + 24 + 8 + (4*9); i < _hsync + 24 + 8 + (4*9) + 16; i++)
                 line[i] = BLANKING_LEVEL;
             break;
         case 3:
@@ -553,10 +553,10 @@ void IRAM_ATTR burst(uint16_t* line)
 void IRAM_ATTR sync(uint16_t* line, int syncwidth)
 {
     //Front porch
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 24; i++)
         line[i] = BLANKING_LEVEL;
     //Sync pulse
-	for (int i = 16; i < syncwidth + 16; i++)
+	for (int i = 24; i < syncwidth + 24; i++)
         line[i] = SYNC_LEVEL;
 }
 
@@ -564,7 +564,7 @@ void IRAM_ATTR blanking(uint16_t* line, bool vbl)
 {
     int syncwidth = vbl ? _hsync_long : _hsync;
     sync(line,syncwidth);
-    for (int i = syncwidth; i < _line_width; i++)
+    for (int i = syncwidth + 24; i < _line_width; i++)
         line[i] = BLANKING_LEVEL;
     if (!vbl)
         burst(line);    // no burst during vbl
