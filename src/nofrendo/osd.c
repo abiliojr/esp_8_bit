@@ -56,6 +56,7 @@ void osd_fullname(char *fullname, const char *shortname)
 /* This gives filenames for storage of saves */
 char *osd_newextension(char *string, char *ext)
 {
+   strcat(string, ext);
    return string;
 }
 
@@ -214,9 +215,12 @@ int osd_init()
     return 0;
 }
 
+void rom_savesram(rominfo_t *rominfo);
 nes_t* _nes_p = 0;
 int nes_emulate_init(const char* path, int width, int height)
 {
+    if (_nes_p)
+        rom_savesram(_nes_p->rominfo);
     if (!_nes_p) {
         if (log_init())
            return -1;
