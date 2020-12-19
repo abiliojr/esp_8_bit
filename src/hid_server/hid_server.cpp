@@ -908,6 +908,10 @@ class HIDSource {
             case CALLBACK_INQUIRY_DONE:
                 for (auto* id : _devices)
                     id->connect();
+
+                if (_devices.size() == 0) {
+                    hci_start_inquiry(5);
+                }
                 break;
 
             case CALLBACK_REMOTE_NAME:
